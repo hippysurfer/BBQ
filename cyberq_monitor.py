@@ -8,6 +8,7 @@ Usage:
                             [--write=<outfile>] [--cooktime=<mins>] [--ip=<address>] [(-q | --quiet)]
   cyberq_monitor.py replay <infile> [--startfrom=<mins>] [--sheet=<name>] [--tempo=<tempo>]
                             [--reload] [--write=<outfile>] [(-q | --quiet)]
+  cyberq_monitor.py load <infile> [--sheet=<name>]
   cyberq_monitor.py (-h | --help)
   cyberq_monitor.py --version
 
@@ -324,14 +325,29 @@ def open_sheets(sheet_name):
     return sheet, control_sheet
 
 
+def load_file(sheet, infile):
+    # Load data from file
+    start = get_start_time(infile)
+    saved_data = list(previous_file_reader(infile, start, 0))
+
+    df = pd.DataFrame(data=saved_data, columns=["time"]+COLS)
+
+    df = df.set_index('time')
+
+    # Post data frame to sheet
+    set_sheet_from_dataframe(sheet, df)
+    
+
 def main(tempo, quiet_mode, sheet_name,
          start_from, save_file, reload_from_sheet,
-         replay_mode, infile, monitor_mode,
+         infile, mode,
          cooktime, address):
-
     set_cyberq_url(f'http://{address}/')
 
-    if replay_mode:
+    # Open the Google sheet (it must already exist).
+    sheet, control_sheet = open_sheets(sheet_name)
+
+    if mode == 'replay':
         # Replay mode
         # Fetch the start time from the save file.
         start = get_start_time(infile)
@@ -339,7 +355,7 @@ def main(tempo, quiet_mode, sheet_name,
         # reader function pulls the data from the selected save file
         reader = functools.partial(previous_file_reader, infile, start, start_from)
 
-    elif monitor_mode:
+    elif mode == 'monitor':
         # Monitor mode
         reader = cyberq_reader
 
@@ -352,11 +368,11 @@ def main(tempo, quiet_mode, sheet_name,
         now = datetime.now()
         start = datetime(now.year, now.month,
                          now.day, now.hour, now.minute, 0)
+    elif mode == 'load':
+        load_file(sheet, infile)
+        return
     else:
         raise Exception("Should not be possible.")
-
-    # Open the Google sheet (it must already exist).
-    sheet, control_sheet = open_sheets(sheet_name)
 
     if reload_from_sheet:
         df = reload(sheet)
@@ -388,11 +404,17 @@ if __name__ == '__main__':
     _reload_from_sheet = arguments['--reload']
     _cooktime = int(arguments['--cooktime'])
     _address = arguments['--ip']
-    _replay_mode = arguments['replay']
     _infile = arguments['<infile>']
-    _monitor_mode = arguments['monitor']
+    if arguments['replay']:
+        _mode = 'replay'
+    elif arguments['monitor']:
+        _mode = 'monitor'
+    elif arguments['load']:
+        _mode = 'load'
+    else:
+        raise Exception("Unknown mode")
 
     main(_tempo, _quiet_mode, _sheet_name,
          _start_from, _save_file, _reload_from_sheet,
-         _replay_mode, _infile, _monitor_mode, _cooktime,
+         _infile, _mode, _cooktime,
          _address)
