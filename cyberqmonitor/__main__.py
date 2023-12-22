@@ -8,7 +8,6 @@ Usage:
   cyberq_monitor.py [-d] replay <infile> [--startfrom=<mins>] [--sheet=<name>] [--tempo=<tempo>]
                                  [--reload] [--write=<outfile>] [(-q | --quiet)]
   cyberq_monitor.py [-d] load <infile> [--sheet=<name>]
-  cyberq_monitor.py [-d] check [--units=<units>]
   cyberq_monitor.py (-h | --help)
   cyberq_monitor.py --version
 
@@ -20,7 +19,7 @@ Options:
   --tempo=<tempo>     Number of seconds between readings [default: 30]
   --reload            Read the initial values from the spreadsheet.
   --write=<outfile>   Write reading to outfile [default: None]
-  --sheet=<name>      Name of the google sheet [default: BBQ]
+  --sheet=<name>      Name of the google sheet [default: 1fHN3vNO1q__4N4FwKcyydRmRmD6pP9DSgxEDkTbPytM]
   --startfrom=<mins>  Number of minutes to skip into replay file [default: 0]
   --cooktime=<mins>   Number of minutes that the cook is expected to last [default: 120]
   --ip=<address>      Hostname or IP address of the CyberQ [default: 10.0.1.99]
@@ -57,8 +56,6 @@ if __name__ == '__main__':
         _mode = 'monitor'
     elif arguments['load']:
         _mode = 'load'
-    elif arguments['check']:
-        _mode = 'check'
     else:
         raise Exception("Unknown mode")
 
